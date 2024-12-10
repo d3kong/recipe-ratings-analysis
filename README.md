@@ -123,3 +123,23 @@ I visualization pertinent to this hypothesis test is below
 
 ## Framing a Prediction Problem
 
+The prediction problem I chose was to predict the ratings of recipes, which is
+a Regression problem. We are going to target the `average_rating` (continuous)
+variable because it directly represents the aggregated user feedback (ratings) 
+for each recipe. It's the outcome I want to predict. The metric I am going to
+use for my model is Root Mean Squared Error (RMSE). I am using RMSE because it 
+measures the average prediction error in the same units as the target variable
+(`average_rating`). making it interpretable. RMSE also penalizes large errors 
+more than small ones, which is important when predicting user ratings because 
+significant prediction errors (e.g., predicting 2.0 instead of 5.0) can lead to 
+poor recommendations.
+
+## Baseline Model 
+
+"The baseline model uses a linear regression algorithm with one quantitative 
+feature (`minutes`) and one nominal feature (`tags`), which was encoded using 
+one-hot encoding. While the model serves as a simple starting point, its 
+performance is poor, with an RMSE of 0.6509 and an R² of -0.0480. This suggests 
+that the current features and linear approach do not adequately explain the 
+variance in `average_rating`. Future models will incorporate additional features 
+and more complex algorithms to improve performance."
