@@ -24,8 +24,8 @@ Then created a couple of distributions of some of the relevant columns in the
 
 <iframe
   src="assets/log-minutes-plotly.html"
-  width="800"
-  height="600"
+  width="500"
+  height="375"
   frameborder="0"
 ></iframe>
 
@@ -33,9 +33,9 @@ Then proceeded to analyze pairs of columns to check for positive associations.
 An example of a pair of columns that showed a weaker association is shown below.
 
 <iframe
-  src="assets/log-minutes-plotly.html"
-  width="800"
-  height="600"
+  src="assets/minutes-ratings.html"
+  width="500"
+  height="375"
   frameborder="0"
 ></iframe>
 
@@ -47,3 +47,79 @@ of the recipes required 15 or less ingredients. The resulting pivot table is
 shown below.
 
 ![alt text](images/pivot-table.png)
+
+## Assessment of Missingness
+
+I believe that the `description` column is NMAR (Not Missing At Random). After
+running several permutation tests on the data in the `recipes` DataFrame, there
+were a couple columns, `n_ingredients` and `average_rating`, that the
+missingness of descriptions depended on. I parsed through the dataset and ran 
+permutation tests on each column using this function
+
+```py
+def permutation_test_fast(col_missing, col_other, n_permutations=500):
+    col_other_array = col_other.to_numpy()
+    col_missing_array = col_missing.to_numpy()
+    observed_stat = col_other_array[col_missing_array].mean() - col_other_array[~col_missing_array].mean()
+    perm_stats = []
+    for _ in range(n_permutations):
+        shuffled = np.random.permutation(col_other_array)
+        perm_stat = shuffled[col_missing_array].mean() - shuffled[~col_missing_array].mean()
+        perm_stats.append(perm_stat)
+    p_value = np.mean(np.abs(perm_stats) >= np.abs(observed_stat))
+    return observed_stat, p_value, perm_stats
+```
+
+A `plotly` plot that demonstrates such missingness exploration is shown below
+
+<iframe
+  src="assets/ingredients-missingness.html"
+  width="500"
+  height="375"
+  frameborder="0"
+></iframe>
+
+## Hypothesis Testing
+
+#### Question: Do recipes with more protein have higher average ratings?
+
+- Null Hypothesis: There is no difference in the average ratings of recipes with 
+higher protein content compared to those with lower protein count
+
+- Alternate Hypothesis: Recipes with higher protein count tend to have higher average ratings
+
+The test was performed using the "difference in means" test-statistic at the 
+0.05 significance level. The code for the hypothesis test is:
+
+```py
+from scipy.stats import ttest_ind
+
+#Perform a two-sample t-test
+t_stat, p_val = ttest_ind(high_protein, low_protein, nan_policy='omit')
+
+# Output results
+print(f"T-statistic: {t_stat}, P-value: {p_val}")
+
+alpha = 0.05  # Significance level
+if p_val < alpha:
+    print("Reject the null hypothesis: Recipes with higher protein content have higher average ratings.")
+else:
+    print("Fail to reject the null hypothesis: No significant difference in ratings.")
+```
+
+The p-value was 0.79, which means we failed to reject the null hypothesis. In 
+other words, the test indicates that there was no statistically significant
+difference in the average ratings of recipes with higher protein content 
+than those with lower protein count.
+
+I visualization pertinent to this hypothesis test is below
+
+<iframe
+  src="assets/hypothesis-test-visualization.html"
+  width="500"
+  height="375"
+  frameborder="0"
+></iframe>
+
+## Framing a Prediction Problem
+
