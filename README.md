@@ -126,8 +126,17 @@ I visualization pertinent to this hypothesis test is below
 The prediction problem I chose was to predict the ratings of recipes, which is
 a Regression problem. We are going to target the `average_rating` (continuous)
 variable because it directly represents the aggregated user feedback (ratings) 
-for each recipe. It's the outcome I want to predict. The metric I am going to
-use for my model is Root Mean Squared Error (RMSE). I am using RMSE because it 
+for each recipe. It's the outcome I want to predict. Features and the target 
+are defined using the code below. 
+
+```py
+nutrition_cols = ['calories', 'fat', 'sugar', 'sodium', 'protein', 'saturated_fat', 'carbs']
+features = recipes[['minutes', 'n_steps', 'n_ingredients'] + nutrition_cols]
+target = recipes['average_rating']
+
+```
+
+The metric I am going to use for my model is Root Mean Squared Error (RMSE). I am using RMSE because it 
 measures the average prediction error in the same units as the target variable
 (`average_rating`). making it interpretable. RMSE also penalizes large errors 
 more than small ones, which is important when predicting user ratings because 
@@ -136,10 +145,60 @@ poor recommendations.
 
 ## Baseline Model 
 
-"The baseline model uses a linear regression algorithm with one quantitative 
+The baseline model uses a linear regression algorithm with one quantitative 
 feature (`minutes`) and one nominal feature (`tags`), which was encoded using 
 one-hot encoding. While the model serves as a simple starting point, its 
 performance is poor, with an RMSE of 0.6509 and an R² of -0.0480. This suggests 
 that the current features and linear approach do not adequately explain the 
 variance in `average_rating`. Future models will incorporate additional features 
-and more complex algorithms to improve performance."
+and more complex algorithms to improve performance.
+
+## Final Model
+
+#### Features added:
+- **Log-transformed Minutes** (`log_minutes`): This transformation helps 
+normalize the distribution of the `minutes` feature, which is often skewed. 
+It likely reduces the influence of extreme outliers and captures diminishing 
+returns in cooking time on recipe ratings.
+- **Protein-to-Calorie Ratio** (`protein_calorie_ratio'): This feature provides 
+insight into the nutritional density of a recipe. It reflects the balance of 
+protein relative to calories, which could influence how recipes are perceived 
+as healthy or satisfying.
+
+These features were selected based on their potential relationship to user 
+preferences and recipe quality:
+1. `log_minutes` caputres the realistic diminishing impact of preparation time 
+on user satisfaction.
+2. `protein_calorie_ratio` highlights the importance of nutrition in predicting 
+recipe ratings, as health-conscious users may prefer recipes with higher 
+protein density.
+
+#### Modeling Algorithm and Hyperparamters
+
+- **Model Algorithm: **Lasso regression was chosen because it performs feature 
+selection by shrinking coefficients of less important features to zero. This is 
+especially useful given the large number of features in the dataset.
+- **Hyperparamter Tuning:**
+  - **Best Hyperparamter **(`alpha`): he optimal value was determined to be 
+  `0.1` using a grid search with cross-validation.
+  - **Tuning Method: ** A grid search with five-fold cross-validation was 
+  conducted to identify the best value for the `alpha` parameter, balancing 
+  model complexity and performance.
+
+The comparison to the Baseline Model is shown below:
+
+| Metric     |   Baseline |  Final |
+|:-----------|------------|-------:|
+| RMSE   |         0.6509 | 0.6355 |   
+| R^2    |         -0.0480| 0.0010 |
+
+The final model slightly improved the RMSE, indicating a better fit to the 
+data. The value R^2, while still low, improved to a positive value, suggesting 
+a marginal gain in the model's explanatory power.
+
+I visualization (scatter plot) omparing the predicted vs. actual ratings for \
+the test set is shown below.
+
+![alt text](images/final-model-visualiation.png)
+
+## Fairness Analysis
